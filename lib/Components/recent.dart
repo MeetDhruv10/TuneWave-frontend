@@ -30,7 +30,7 @@ class Cardsqueue extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           cardsBild("assets/images/liked.png", "Liked Songs"),
-          cardsBild("assets/images/logo.png", "Liked Songs"),
+          cardsBild("assets/images/liked.png", "Liked Songs"),
         ],
 
       ),

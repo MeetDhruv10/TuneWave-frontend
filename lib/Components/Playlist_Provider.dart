@@ -11,10 +11,11 @@ class Playlist_Provider extends ChangeNotifier {
         AlbumArtImagePath: "assets/images/bam.png",
         audiopath: "audio/kesariya.mp3"),
     Song(
-        SongName: "Ehehhe",
-        ArtistName: "Lol Singh",
-        AlbumArtImagePath: "assets/images/logo.png",
+        SongName: "Khol De Par",
+        ArtistName: "Arijit Singh",
+        AlbumArtImagePath: "assets/images/Khol.png",
         audiopath: "audio/khol.mp3"),
+
   ];
 
   int? _currentSongIndex;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:tunewave/LSO/LoginPage.dart';
 import 'package:tunewave/LSO/Signup.dart';
 import 'package:tunewave/Views/Home.dart';
 import 'Components/Playlist_Provider.dart';
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
           splash: Image(
             image: AssetImage('assets/images/logoyashwi.png'),
           ),
-          nextScreen: SignUp(title: 'Home'), // Change this to LoginPage if you want to start with a login screen
+          nextScreen: LoginPage(), // Change this to LoginPage if you want to start with a login screen
           duration: 2000,
           pageTransitionType: PageTransitionType.fade,
           backgroundColor: Colors.black,

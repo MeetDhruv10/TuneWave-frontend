@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tunewave/Views/Songs.dart';
@@ -7,6 +8,7 @@ import '../Components/Drawer.dart';
 import '../Components/Playlist_Provider.dart';
 import '../Components/recent.dart';
 import 'Playlist.dart';
+import 'package:http/http.dart' as http;
 
 class Home extends StatefulWidget {
   const Home({Key? key, required this.title}) : super(key: key);
@@ -21,14 +23,42 @@ class _MyHomePageState extends State<Home> {
   late Timer _timer;
   String greeting = '';
 
+  List<String> artistLinks = [];
+
+  // Function to fetch the artistsLink from the endpoint
+  Future<void> fetchArtistLinks() async {
+    final url = Uri.parse(
+        'http://192.168.0.103:3000/artistsimage'); // Replace with your endpoint
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final Map<String,dynamic> data = jsonDecode(response.body);
+
+        // Extract 'artistsLink' from the JSON response
+
+        setState(() {
+          artistLinks = List<String>.from(data['artistsLinks']);
+        });
+        print(artistLinks[0]);
+      } else {
+        throw Exception('Failed to load data');
+      }
+    } catch (error) {
+      print('Error fetching artist links: $error');
+    }
+  }
   @override
   void initState() {
     super.initState();
+    fetchArtistLinks();
     updateGreeting();
     _timer = Timer.periodic(Duration(minutes: 1), (timer) {
       updateGreeting();
     });
   }
+
 
   void updateGreeting() {
     setState(() {
@@ -55,17 +85,24 @@ class _MyHomePageState extends State<Home> {
 
   void goToSong(int index) {
     final playlistProvider =
-        Provider.of<Playlist_Provider>(context, listen: false);
+    Provider.of<Playlist_Provider>(context, listen: false);
     playlistProvider.currentSongIndex = index;
     Navigator.push(
       context,
-      MaterialPageRoute(
-          builder: (context) => Songs()),
+      MaterialPageRoute(builder: (context) => Songs()),
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
+    // Generate the list of image URLs dynamically
+    final List<String> imageUrls = List.generate(
+      artistLinks.length,
+          (index) =>
+      'https://tunewave-artists-image.s3.ap-south-1.amazonaws.com/${artistLinks[index]}',
+    );
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -100,8 +137,7 @@ class _MyHomePageState extends State<Home> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => Playlist(
-                                    title: "")), // Change this to your page
+                                builder: (context) => Playlist(title: "")),
                           );
                         },
                       ),
@@ -112,18 +148,13 @@ class _MyHomePageState extends State<Home> {
             ),
           ),
           SizedBox(width: 10),
-          // Optional spacing between the greeting and the icon
         ],
       ),
       drawer: MyDrawer(),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Colors.purple,
-              Colors.black,
-              Colors.black,
-            ],
+            colors: [Colors.black, Colors.black, Colors.black],
             begin: Alignment.topCenter,
           ),
           borderRadius: BorderRadius.circular(12.0),
@@ -157,6 +188,22 @@ class _MyHomePageState extends State<Home> {
                   ),
                 ),
                 SizedBox(height: 20),
+                // Display the images from S3
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: imageUrls.length,
+                  itemBuilder: (context, index) {
+                    return Center(
+                      child: Image.network(
+                        imageUrls[index],
+                        height: 200, // Set the height you need
+                        width: 200,  // Set the width you need
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 20),
                 Text(
                   "Your Playlist",
                   style: TextStyle(fontSize: 24, color: Colors.white),
@@ -170,8 +217,8 @@ class _MyHomePageState extends State<Home> {
                         final song = playlistProvider.Playlist[index];
                         return ListTile(
                           leading: SizedBox(
-                            width: 100.0, // Adjust width as needed
-                            height: 300.0, // Adjust height as needed
+                            width: 100.0,
+                            height: 100.0,
                             child: Image.asset(
                               song.AlbumArtImagePath,
                               fit: BoxFit.cover,
@@ -181,14 +228,14 @@ class _MyHomePageState extends State<Home> {
                             song.SongName,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22.0, // Adjust text size as needed
+                              fontSize: 22.0,
                             ),
                           ),
                           subtitle: Text(
                             song.ArtistName,
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 18.0, // Adjust text size as needed
+                              fontSize: 18.0,
                             ),
                           ),
                           onTap: () => goToSong(index),
