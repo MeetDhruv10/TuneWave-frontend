@@ -1,5 +1,3 @@
-
-
 String validateUsername(String username) {
   if (username.isEmpty) {
     return 'Enter a valid Username';

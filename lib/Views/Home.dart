@@ -22,26 +22,19 @@ class Home extends StatefulWidget {
 class _MyHomePageState extends State<Home> {
   late Timer _timer;
   String greeting = '';
-
   List<String> artistLinks = [];
 
-  // Function to fetch the artistsLink from the endpoint
   Future<void> fetchArtistLinks() async {
-    final url = Uri.parse(
-        'http://192.168.0.103:3000/artistsimage'); // Replace with your endpoint
+    final url = Uri.parse('http://192.168.0.105:3000/artistsimage'); // Replace with your endpoint
 
     try {
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        final Map<String,dynamic> data = jsonDecode(response.body);
-
-        // Extract 'artistsLink' from the JSON response
-
+        final Map<String, dynamic> data = jsonDecode(response.body);
         setState(() {
           artistLinks = List<String>.from(data['artistsLinks']);
         });
-        print(artistLinks[0]);
       } else {
         throw Exception('Failed to load data');
       }
@@ -49,6 +42,7 @@ class _MyHomePageState extends State<Home> {
       print('Error fetching artist links: $error');
     }
   }
+
   @override
   void initState() {
     super.initState();
@@ -58,7 +52,6 @@ class _MyHomePageState extends State<Home> {
       updateGreeting();
     });
   }
-
 
   void updateGreeting() {
     setState(() {
@@ -84,23 +77,20 @@ class _MyHomePageState extends State<Home> {
   }
 
   void goToSong(int index) {
-    final playlistProvider =
-    Provider.of<Playlist_Provider>(context, listen: false);
+    final playlistProvider = Provider.of<Playlist_Provider>(context, listen: false);
     playlistProvider.currentSongIndex = index;
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => Songs()),
+      MaterialPageRoute(builder: (context) => Songs()), // Navigate to the Songs page
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-    // Generate the list of image URLs dynamically
     final List<String> imageUrls = List.generate(
       artistLinks.length,
-          (index) =>
-      'https://tunewave-artists-image.s3.ap-south-1.amazonaws.com/${artistLinks[index]}',
+          (index) => 'https://tunewave-artists-image.s3.ap-south-1.amazonaws.com/${artistLinks[index]}',
     );
 
     return Scaffold(
@@ -108,7 +98,7 @@ class _MyHomePageState extends State<Home> {
       appBar: AppBar(
         title: Center(
           child: Text(
-            "$greeting",
+            greeting,
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -136,8 +126,7 @@ class _MyHomePageState extends State<Home> {
                         onTap: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) => Playlist(title: "")),
+                            MaterialPageRoute(builder: (context) => Playlist(title: "")),
                           );
                         },
                       ),
@@ -151,100 +140,94 @@ class _MyHomePageState extends State<Home> {
         ],
       ),
       drawer: MyDrawer(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Colors.black, Colors.black],
-            begin: Alignment.topCenter,
-          ),
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: ListView(
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  child: recent(),
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => Songs()));
-                  },
+            GestureDetector(
+              child: recent(),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => Songs()));
+              },
+            ),
+            SizedBox(height: 30),
+            ShaderMask(
+              shaderCallback: (bounds) => LinearGradient(
+                colors: [Colors.blue, Colors.red],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+              child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  "Your favorite artists",
+                  style: TextStyle(fontSize: 40, color: Colors.white),
                 ),
-                SizedBox(height: 30),
-                ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [Colors.blue, Colors.red],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(
-                      Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Your favorite artists",
-                      style: TextStyle(fontSize: 40, color: Colors.white),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                // Display the images from S3
-                ListView.builder(
-                  shrinkWrap: true,
+              ),
+            ),
+            SizedBox(height: 20),
+            if (artistLinks.isNotEmpty)
+              Container(
+                height: 150,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
                   itemCount: imageUrls.length,
                   itemBuilder: (context, index) {
-                    return Center(
-                      child: Image.network(
-                        imageUrls[index],
-                        height: 200, // Set the height you need
-                        width: 200,  // Set the width you need
-                        fit: BoxFit.cover,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(imageUrls[index]),
+                        radius: 50,
                       ),
                     );
                   },
                 ),
-                SizedBox(height: 20),
-                Text(
-                  "Your Playlist",
-                  style: TextStyle(fontSize: 24, color: Colors.white),
-                ),
-                Consumer<Playlist_Provider>(
-                  builder: (context, playlistProvider, child) {
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: playlistProvider.Playlist.length,
-                      itemBuilder: (context, index) {
-                        final song = playlistProvider.Playlist[index];
-                        return ListTile(
-                          leading: SizedBox(
-                            width: 100.0,
-                            height: 100.0,
-                            child: Image.asset(
-                              song.AlbumArtImagePath,
-                              fit: BoxFit.cover,
-                            ),
+              )
+            else
+              Center(child: CircularProgressIndicator()),
+            SizedBox(height: 20),
+            Text(
+              "Your Playlist",
+              style: TextStyle(fontSize: 24, color: Colors.white),
+            ),
+            SizedBox(height: 20),
+            Container(
+              height: MediaQuery.of(context).size.height - 300,
+              child: Consumer<Playlist_Provider>(
+                builder: (context, playlistProvider, child) {
+                  return ListView.builder(
+                    itemCount: playlistProvider.Playlist.length,
+                    itemBuilder: (context, index) {
+                      final song = playlistProvider.Playlist[index];
+                      return ListTile(
+                        leading: SizedBox(
+                          width: 100.0,
+                          height: 150.0,
+                          child: Image.asset(
+                            song.AlbumArtImagePath,
+                            fit: BoxFit.cover,
                           ),
-                          title: Text(
-                            song.SongName,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22.0,
-                            ),
+                        ),
+                        title: Text(
+                          song.SongName,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22.0,
                           ),
-                          subtitle: Text(
-                            song.ArtistName,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18.0,
-                            ),
+                        ),
+                        subtitle: Text(
+                          song.ArtistName,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 18.0,
                           ),
-                          onTap: () => goToSong(index),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
+                        ),
+                        onTap: () => goToSong(index),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
