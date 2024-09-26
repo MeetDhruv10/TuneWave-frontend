@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:tunewave/LSO/LoginPage.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Add this import
+import 'package:tunewave/LSO/LoginPage.dart'; // Adjust import as per your file structure
 import 'package:tunewave/Views/Profile.dart';
 
 class MyDrawer extends StatelessWidget {
-  const MyDrawer({super.key});
+  const MyDrawer({Key? key}) : super(key: key);
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -23,12 +22,19 @@ class MyDrawer extends StatelessWidget {
             ),
             TextButton(
               child: Text('Log Out'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                Navigator.pushReplacement(
-                  context,
+              onPressed: () async {
+                // Clear user session here (example)
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.clear(); // Clear all saved data
+
+                // Close the dialog
+                Navigator.of(context).pop();
+
+                // Navigate to LoginPage and remove all previous routes
+                Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (context) => LoginPage()),
-                ); // Navigate to the LoginPage
+                      (Route<dynamic> route) => false,
+                );
               },
             ),
           ],
@@ -41,7 +47,6 @@ class MyDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: Colors.black,
-
       child: Column(
         children: [
           DrawerHeader(
